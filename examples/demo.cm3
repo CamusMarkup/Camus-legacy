@@ -1,0 +1,50 @@
+= Level 1 Header
+== Level 2 Header
+=== Level 3 Header
+==== Level 4 Header
+===== Level 5 Header
+====== Level 6 Header
+
+
+> multiple line 
+> block quote
+> block quote
+
+#{
+    begin region
+    region data
+    blahblah
+#}
+
+#{code javascript
+
+function hanoi(x, y, z) {
+    console.log("hello, world!");
+}
+
+#}
+
++ list1
++ list2
+  1.  ol1
+  2.  ol2
+  3.  ol3
+- new ulist
+
+
+*bold* /italics/ _underline_ ~~delete~~
+
+{img:https://img_link} {img(alt):https://img_link}
+
+{link(Here):https://sebastian.graphics}
+
+{ref:other_cm3_file.cm3}
+
+{footnote:1}  {footnote:2}
+
+
+
+[1]: blahblahblahblahblah
+[2]: blahblahbalhblah
+
+
