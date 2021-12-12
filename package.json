@@ -1,0 +1,28 @@
+{
+  "name": "@bctnry/camus-core",
+  "version": "0.0.1",
+  "description": "A markup language",
+  "main": "out/main.js",
+  "bin": {
+    "camus": "out/main.js"
+  },
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "build": "npx tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/bctnry/Camus.git"
+  },
+  "author": "Sebastian Higgins",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/bctnry/Camus/issues"
+  },
+  "homepage": "https://github.com/bctnry/Camus#readme",
+  "devDependencies": {
+    "typescript": "^4.5.2"
+  }
+}

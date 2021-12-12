@@ -1,3 +1,3 @@
-# Camus3
+# Camus
 
-
+A markup language that tries to be humble.

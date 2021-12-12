@@ -1,3 +1,13 @@
+= Camus: A humble markup language
+
+{img(logo):./camus-icon.png}
+
+Github repository: {link:https://github.com/CamusMarkup/Camus}
+
+The following is demo section.
+
+-----
+
 = Level 1 Header
 == Level 2 Header
 === Level 3 Header
@@ -5,34 +15,9 @@
 ===== Level 5 Header
 ====== Level 6 Header
 
+5 dash or more will be converted to horizontal ruler.
 
-> multiple line 
-> block quote
-> block quote
-
-#{
-    begin region
-    region data
-    blahblah
-#}
-
-#{code javascript
-
-function hanoi(x, y, z) {
-    console.log("hello, world!");
-}
-
-#}
-
-+ list1
-+ list2
-  1.  ol1
-  2.  ol2
-  3.  ol3
-- new ulist
-
-
-*bold* /italics/ _underline_ ~~delete~~
+*bold* /italics/ _underline_ ~~delete~~ `inline code`
 
 {img:https://img_link} {img(alt):https://img_link}
 
@@ -40,11 +25,60 @@ function hanoi(x, y, z) {
 
 {ref:other_cm3_file.cm3}
 
-{footnote:1}  {footnote:2}
+{footnote@1}  {footnote@2}
 
+
+> This beat is mine
+> You can have it
+> Just take your time
+> And do what you wanna do (And do that dance)
+> 
+> This beat is mine
+> You can have it
+> Just party down
+> And do what you wanna do (But do that dance)
+
+#{verbatim
+    Tonight, before you lay down to the sweetness of your sleep
+        Do you question your surrender to the drop from Lover's Leap
+    Or does the anaesthetic darkness take hold on it's very own?
+        Does your body rise in service with not one dissenting groan?
+#}
+
+#{ignore
+  ignored region
+  ignored region
+  ignored region
+#}
+
+#{quote
+    I'm not giving in to security under pressure
+    I'm not missing out on the promise of adventure
+    I'm not giving up on implausible dreams
+
+    Experience to extremes
+    Experience to extremes
+#}
+
+#{code javascript
+  function hanoi(n, from, via, to) {
+      if (n === 0) { throw new Error('no disk.'); }
+      else if (n === 1) { console.log('from ' + from + ' to ' + to); }
+      else {
+          hanoi(n-1, from, to, via);
+          console.log('from ' + from + ' to ' + to);
+          hanoi(n-1, via, to, from);
+      }
+  }
+#}
+
++ list1
++ list2
+  1.  ol1
+  2.  ol2
+  3.  ol3
+- ulist3
 
 
 [1]: blahblahblahblahblah
 [2]: blahblahbalhblah
-
-
