@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/bctnry/Camus.git"
+    "url": "git+ssh://git@github.com/CamusMarkup/Camus.git"
   },
   "author": "Sebastian Higgins",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/bctnry/Camus/issues"
+    "url": "https://github.com/CamusMarkup/Camus/issues"
   },
-  "homepage": "https://github.com/bctnry/Camus#readme",
+  "homepage": "https://github.com/CamusMarkup/Camus#readme",
   "devDependencies": {
     "typescript": "^4.5.2"
   }
