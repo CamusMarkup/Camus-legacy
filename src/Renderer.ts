@@ -12,7 +12,7 @@ export type HTMLRendererOption = {
     }
 }
 // NOTE: punctuations inside inline code should not be affected.
-export class CamusHTMLRenderer {
+export class HTMLRenderer {
     private _additionalHead: string[] = [];
     private _externalStylesheet: string[] = [];
     private _replacePunctuation: {
