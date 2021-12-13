@@ -13,15 +13,15 @@ export type HTMLRendererOption = {
 }
 // NOTE: punctuations inside inline code should not be affected.
 export class HTMLRenderer {
-    private _additionalHead: string[] = [];
-    private _externalStylesheet: string[] = [];
-    private _replacePunctuation: {
+    protected _additionalHead: string[] = [];
+    protected _externalStylesheet: string[] = [];
+    protected _replacePunctuation: {
         singleQuote?: [string, string],
         doubleQuote?: [string, string],
         singleDash?: string,
         doubleDash?: string,        
     }|undefined = undefined;
-    private _pp: PrettyPrinter = new PrettyPrinter();
+    protected _pp: PrettyPrinter = new PrettyPrinter();
     constructor(options?: HTMLRendererOption) {
         if (options) {
             this._additionalHead = options.additionalHead || [];
@@ -37,14 +37,14 @@ export class HTMLRenderer {
     }
 
     
-    private _singleQuote: boolean = false;
-    private _doubleQuote: boolean = false;
-    private _renderLine(x: ast.CamusLine) {
+    protected _singleQuote: boolean = false;
+    protected _doubleQuote: boolean = false;
+    protected _renderLine(x: ast.CamusLine) {
         this._singleQuote = false;
         this._doubleQuote = false;
         x.forEach((v) => this._render(v));
     }
-    private _renderLogicLine(x: ast.CamusLogicLine, noWrapper: boolean = false) {
+    protected _renderLogicLine(x: ast.CamusLogicLine, noWrapper: boolean = false) {
         this._singleQuote = false;
         this._doubleQuote = false;
         let firstPassed = false;
@@ -67,7 +67,7 @@ export class HTMLRenderer {
             this._pp.string('</p>').line();
         }
     }
-    private _render(x: ast.CamusNode) {
+    protected _render(x: ast.CamusNode) {
         if (typeof x === 'string') {
             this._text(x);
         } else {
@@ -92,7 +92,7 @@ export class HTMLRenderer {
         }
     }
 
-    private _text(n: string) {
+    protected _text(n: string) {
         if (this._replacePunctuation) {
             if (!this._replacePunctuation.singleQuote && !this._replacePunctuation.doubleQuote) {
                 this._pp.string(n.replace(/--/g, this._replacePunctuation.doubleDash || '--').replace(/-/g, this._replacePunctuation.singleDash || '-'));
@@ -124,12 +124,12 @@ export class HTMLRenderer {
             this._pp.string(n);
         }
     }
-    private _heading(n: ast.HeadingNode) {
+    protected _heading(n: ast.HeadingNode) {
         this._pp.indent().string(`<h${n.level}>`);
         this._renderLine(n.text);
         this._pp.string(`</h${n.level}>`).line();
     }
-    private _block(n: ast.BlockNode) {
+    protected _block(n: ast.BlockNode) {
         if (n.type === 'ignore') { return; }
         
         switch (n.type) {
@@ -166,43 +166,43 @@ export class HTMLRenderer {
 
         return;
     }
-    private _inlineStyle(n: ast.InlineStyleNode) {
+    protected _inlineStyle(n: ast.InlineStyleNode) {
         let start = n.style.map((v) => `<${v}>`).join('').replace(/bold/g, 'b').replace(/italics/g, 'i').replace(/underline/g, 'span style="text-decoration:underline"').replace(/delete/g, 'del');
         let end = n.style.map((v) => `</${v}>`).join('').replace(/bold/g, 'b').replace(/italics/g, 'i').replace(/underline/g, 'span').replace(/delete/g, 'del');
         this._pp.string(start);
         this._renderLine(n.text);
         this._pp.string(end);
     }
-    private _inlineCode(n: ast.InlineCodeNode) {
+    protected _inlineCode(n: ast.InlineCodeNode) {
         this._pp.string(`<code>${n.text}</code>`);
     }
-    private _link(n: ast.LinkNode) {
+    protected _link(n: ast.LinkNode) {
         this._pp.string(`<a href="${n.url}">${n.text||n.url}</a>`);
     }
-    private _ref(n: ast.RefNode) {
+    protected _ref(n: ast.RefNode) {
         // NOTE: core lib does nothing on ref nodes.
         // to make use of ref node, extends from CamusHTMLRenderer or write your own.
         this._pp.string('');
     }
-    private _footnoteRef(n: ast.FootnoteRefNode) {
+    protected _footnoteRef(n: ast.FootnoteRefNode) {
         this._pp.string(`<sup><a href="#cite-${n.id}">[${n.id}]</a></sup>`);
     }
-    private _footnoteText(n: ast.FootnoteTextNode) {
+    protected _footnoteText(n: ast.FootnoteTextNode) {
         this._pp.indent().string(`<div class="footnote-item">[<a name="cite-${n.id}">${n.id}</a>] `);
         n.text.forEach((v, i) => this._renderLogicLine(v, i === 0));
         this._pp.removeIndent().indent().string(`</div>`).line();
     }
-    private _footnoteBlock(n: ast.FootnoteBlockNode) {
+    protected _footnoteBlock(n: ast.FootnoteBlockNode) {
         this._pp.indent().string('<div class="footnote">').line().addIndent();
         n.content.forEach((v) => {
             this._footnoteText(v);
         });
         this._pp.removeIndent().string('</div>').line();
     }
-    private _image(n: ast.ImageNode) {
+    protected _image(n: ast.ImageNode) {
         this._pp.string(`<img src="${n.url}" alt="${n.alt}" />`);
     }
-    private _list(n: ast.ListNode) {
+    protected _list(n: ast.ListNode) {
         let tagName = n.ordered? 'ol' : 'ul';
         this._pp.line().indent().string(`<${tagName}>`).line().addIndent();
         n.items.forEach((v) => {
