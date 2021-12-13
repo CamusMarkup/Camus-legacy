@@ -44,7 +44,7 @@ normal *bold _boldu ~~budelete~~ boldu __ bold*
         continue.
 */
 // NOTE: requires x to have only one single line.
-export function _parseInline(x: string): ast.CamusLine {
+function _parseInline(x: string): ast.CamusLine {
     let matchres;
     let subj = x;
     let stash: (ast.CamusInlineNode|ast.CamusLine)[] = [];
