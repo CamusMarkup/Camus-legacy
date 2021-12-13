@@ -64,6 +64,7 @@ export type LinkNode = {
 export type RefNode = {
     _nodeType: CamusNodeType.Ref,
     path: string,
+    text: string,
 };
 
 export type FootnoteRefNode = {

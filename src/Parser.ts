@@ -72,7 +72,7 @@ function _parseInline(x: string): ast.CamusLine {
                     break;
                 }
                 case 'ref': {
-                    _StashPush({_nodeType: ast.CamusNodeType.Ref, path: matchres[3]||'' });
+                    _StashPush({_nodeType: ast.CamusNodeType.Ref, path: matchres[3]||'', text: matchres[2]||''});
                     break;
                 }
                 default: {
