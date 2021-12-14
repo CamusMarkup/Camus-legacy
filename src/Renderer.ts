@@ -223,7 +223,7 @@ export class HTMLRenderer {
         this._pp.line().indent().string(`<${tagName}>`).line().addIndent();
         n.items.forEach((v) => {
             this._pp.indent().string(`<li>`);
-            v.text.forEach((j) => j.forEach((k) => this._render(k)));
+            v.text.forEach((v, i) => this._renderLogicLine(v, i===0));
             this._pp.string(`</li>`).line();
         });
         this._pp.removeIndent().indent().string(`</${tagName}>`).line();
