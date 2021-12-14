@@ -75,7 +75,7 @@ export class HTMLRenderer {
                 case ast.CamusNodeType.Heading: { this._heading(x); break; }
                 case ast.CamusNodeType.Block: { this._block(x); break; }
                 case ast.CamusNodeType.InlineStyle: { this._inlineStyle(x); break; }
-                case ast.CamusNodeType.InlineCode: { this._inlineCode(x); break; }
+                case ast.CamusNodeType.Tag: { this._tag(x); break; }
                 case ast.CamusNodeType.Link: { this._link(x); break; }
                 case ast.CamusNodeType.Ref: { this._ref(x); break; }
                 case ast.CamusNodeType.FootnoteRef: { this._footnoteRef(x); break; }
@@ -129,6 +129,9 @@ export class HTMLRenderer {
         this._renderLine(n.text);
         this._pp.string(`</h${n.level}>`).line();
     }
+    protected _tag(n: ast.TagNode) {
+        this._pp.string(`<a name="${n.id}"></a>`);
+    }
     protected _block(n: ast.BlockNode) {
         if (n.type === 'ignore') { return; }
         
@@ -167,22 +170,35 @@ export class HTMLRenderer {
         return;
     }
     protected _inlineStyle(n: ast.InlineStyleNode) {
-        let start = n.style.map((v) => `<${v}>`).join('').replace(/bold/g, 'b').replace(/italics/g, 'i').replace(/underline/g, 'span style="text-decoration:underline"').replace(/delete/g, 'del');
-        let end = n.style.map((v) => `</${v}>`).join('').replace(/bold/g, 'b').replace(/italics/g, 'i').replace(/underline/g, 'span').replace(/delete/g, 'del');
+        let start = n.style.map((v) => `<${v}>`).join('').replace(/bold/g, 'b').replace(/italics/g, 'i').replace(/underline/g, 'span style="text-decoration:underline"').replace(/delete/g, 'del').replace(/code/g, 'code');
+        let end = n.style.map((v) => `</${v}>`).join('').replace(/bold/g, 'b').replace(/italics/g, 'i').replace(/underline/g, 'span').replace(/delete/g, 'del').replace(/code/g, 'code');
         this._pp.string(start);
         this._renderLine(n.text);
         this._pp.string(end);
     }
-    protected _inlineCode(n: ast.InlineCodeNode) {
-        this._pp.string(`<code>${n.text}</code>`);
-    }
     protected _link(n: ast.LinkNode) {
-        this._pp.string(`<a href="${n.url}">${n.text||n.url}</a>`);
+        this._pp.string(`<a href="${n.url}">`);
+        if (n.text && n.text.filter((v) => v && (typeof v !== 'string' || v.trim())).length > 0) {
+            this._renderLine(n.text);
+        } else {
+            this._pp.string(n.url);
+        }
+        this._pp.string('</a>');
     }
     protected _ref(n: ast.RefNode) {
         // NOTE: core lib does nothing on ref nodes.
         // to make use of ref node, extends from CamusHTMLRenderer or write your own.
-        this._pp.string('');
+        if (n.path.startsWith('#')) {
+            this._pp.string(`<a href="${n.path}">`);
+            if (n.text && n.text.filter((v) => v && (typeof v !== 'string' || v.trim())).length > 0) {
+                this._renderLine(n.text);
+            } else {
+                this._pp.string(n.path);
+            }
+            this._pp.string('</a>');
+        } else {
+            this._pp.string('');
+        }
     }
     protected _footnoteRef(n: ast.FootnoteRefNode) {
         this._pp.string(`<sup><a href="#cite-${n.id}">[${n.id}]</a></sup>`);

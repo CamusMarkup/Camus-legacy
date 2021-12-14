@@ -3,12 +3,16 @@ import * as ast from './AST';
 
 const REGEX_BRACE_TAG = /^\{([a-zA-Z0-9]+)(?:\(((?:\\\)|[^)])*)\))?:((?:\\\}|[^}])*)\}/;
 const REGEX_FOOTNOTE_TAG = /^\{footnote@((?:\\\}|\\\]|[^}\]\s])*)\}/;
-const REGEX_INLINE_CODE = /^`((?:\\`|[^`]*))`/;
-type InlineStyleParseStatus = {
-    bold: boolean,
-    italics: boolean,
-    underline: boolean,
-    delete: boolean,
+const REGEX_HASH_TAG = /^\{#((?:\\\}|[^}])*)\}/;
+
+
+
+function _checkIfSpecialTreatmentRequiredInline(x: string): boolean {
+    return !!(
+        REGEX_BRACE_TAG.exec(x)
+        || REGEX_FOOTNOTE_TAG.exec(x)
+        || REGEX_HASH_TAG.exec(x)
+    );
 }
 
 /*
@@ -61,10 +65,13 @@ function _parseInline(x: string): ast.CamusLine {
         if (matchres = REGEX_FOOTNOTE_TAG.exec(subj)) {
             _StashPush({_nodeType: ast.CamusNodeType.FootnoteRef, id: matchres[1]});
             subj = subj.substring(matchres[0].length);
+        } else if (matchres = REGEX_HASH_TAG.exec(subj)) {
+            _StashPush({_nodeType: ast.CamusNodeType.Tag, id: matchres[1]});
+            subj = subj.substring(matchres[0].length);
         } else if (matchres = REGEX_BRACE_TAG.exec(subj)) {
             switch (matchres[1]) {
                 case 'link': {
-                    _StashPush({_nodeType: ast.CamusNodeType.Link, url: matchres[3]||'', text: matchres[2]||''});
+                    _StashPush({_nodeType: ast.CamusNodeType.Link, url: matchres[3]||'', text: _parseInline(matchres[2]||'')});
                     break;
                 }
                 case 'img': {
@@ -72,7 +79,7 @@ function _parseInline(x: string): ast.CamusLine {
                     break;
                 }
                 case 'ref': {
-                    _StashPush({_nodeType: ast.CamusNodeType.Ref, path: matchres[3]||'', text: matchres[2]||''});
+                    _StashPush({_nodeType: ast.CamusNodeType.Ref, path: matchres[3]||'', text: _parseInline(matchres[2]||'')});
                     break;
                 }
                 default: {
@@ -81,11 +88,8 @@ function _parseInline(x: string): ast.CamusLine {
                 }
             }
             subj = subj.substring(matchres[0].length);
-        } else if (matchres = REGEX_INLINE_CODE.exec(subj)){
-            _StashPush({_nodeType: ast.CamusNodeType.InlineCode, text: matchres[1]});
-            subj = subj.substring(matchres[0].length);
         } else {
-            if ('*/_'.includes(subj[0]) || subj.startsWith('~~')) {
+            if ('*/_`'.includes(subj[0]) || subj.startsWith('~~')) {
                 if (stack.includes(subj[0]) || (subj.startsWith('~~') && stack.includes('~~'))) {
                     // x[0] in stack.
                     // NOTE: now there's a problem. if we have an input like this:
@@ -130,12 +134,13 @@ function _parseInline(x: string): ast.CamusLine {
                     ASSERT('stashTop should an array.', Array.isArray(stashTop));
                     stash[stash.length-1] = [...stashTop, ...rewindStash];
                     // now we resolve stack top:
-                    let styleArray: ('bold'|'italics'|'underline'|'delete')[] = [];
+                    let styleArray: ('bold'|'italics'|'underline'|'delete'|'code')[] = [];
                     let s = stack.pop();
                     styleArray.push(
                         s === '*'? 'bold'
                         : s === '/'? 'italics'
                         : s === '_'? 'underline'
+                        : s === '`'? 'code'
                         : 'delete'
                     );
                     let lastStashTop = stash.pop();
@@ -148,12 +153,12 @@ function _parseInline(x: string): ast.CamusLine {
                     stack.push(subj.startsWith('~~')? '~~' : subj[0]);
                     subj = subj.substring(subj.startsWith('~~')? 2 : 1);
                 }
-            } else if (subj[0] === '\\' && subj[1] && '*/_~{`'.includes(subj[1])) {
+            } else if (subj[0] === '\\' && subj[1] && '*/_`~{`'.includes(subj[1])) {
                 _StashPush(subj[1]);
                 subj = subj.substring(2);
             } else {
                 let i = 0;
-                while (subj[i] && !'*/_~{`\\'.includes(subj[i])) {
+                while (subj[i] && !'*/_~`\\'.includes(subj[i]) && !_checkIfSpecialTreatmentRequiredInline(subj.substring(i))) {
                     i++;
                 }
                 _StashPush(subj.substring(0, i));

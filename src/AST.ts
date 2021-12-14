@@ -19,6 +19,7 @@ export enum CamusNodeType {
     FootnoteRef,
     FootnoteText,
     FootnoteBlock,
+    Tag,
     Image,
     List,
     ListItem,
@@ -41,14 +42,9 @@ export type BlockNode = {
 
 export type InlineStyleNode = {
     _nodeType: CamusNodeType.InlineStyle,
-    style: ('bold'|'italics'|'underline'|'delete')[],
+    style: ('bold'|'italics'|'underline'|'delete'|'code')[],
     text: CamusLine,
 }
-
-export type InlineCodeNode = {
-    _nodeType: CamusNodeType.InlineCode,
-    text: string,
-};
 
 export type InlineIgnoreNode = {
     _nodeType: CamusNodeType.InlineIgnore,
@@ -58,13 +54,18 @@ export type InlineIgnoreNode = {
 export type LinkNode = {
     _nodeType: CamusNodeType.Link,
     url: string,
-    text: string,
+    text: CamusLine,
+};
+
+export type TagNode = {
+    _nodeType: CamusNodeType.Tag,
+    id: string,
 };
 
 export type RefNode = {
     _nodeType: CamusNodeType.Ref,
     path: string,
-    text: string,
+    text: CamusLine,
 };
 
 export type FootnoteRefNode = {
@@ -102,7 +103,7 @@ export type HorizontalRuleNode = {
 }
 
 // NOTE: atomic node means an inline node that cannot contain a child node.
-export type CamusAtomicNode = string | LinkNode | RefNode | FootnoteRefNode | InlineCodeNode | InlineIgnoreNode | ImageNode ;
+export type CamusAtomicNode = string | LinkNode | RefNode | FootnoteRefNode | InlineIgnoreNode | ImageNode | TagNode;
 export function isCamusAtomicNode(x: CamusNode): x is CamusAtomicNode {
     return typeof x === 'string' || [
         CamusNodeType.Link,
@@ -111,6 +112,7 @@ export function isCamusAtomicNode(x: CamusNode): x is CamusAtomicNode {
         CamusNodeType.InlineCode,
         CamusNodeType.InlineIgnore,
         CamusNodeType.Image,
+        CamusNodeType.Tag,
     ].includes(x._nodeType);
 }
 export type CamusInlineNode = InlineStyleNode | CamusAtomicNode;

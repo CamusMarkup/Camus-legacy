@@ -27,6 +27,7 @@ The following is demo section.
 
 {footnote@1}  {footnote@2}
 
+{#tag-name}
 
 > This beat is mine
 > You can have it
@@ -79,6 +80,7 @@ The following is demo section.
   3.  ol3
 - ulist3
 
+{ref:#tag-node}
 
 [1]: blahblahblahblahblah
 [2]: blahblahbalhblah
