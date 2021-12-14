@@ -138,19 +138,19 @@ export class HTMLRenderer {
         switch (n.type) {
             // NOTE: in `verbatim` and `code`, assumes both only contain strings.
             case 'verbatim': {
-                this._pp.indent().string(`<pre ${n.arg? `class="${n.arg}"` : ''}>`).line().addIndent();
+                this._pp.indent().string(`<pre ${n.arg? `class="${n.arg}"` : ''}>`);
                 n.text.forEach((v) => {
                     v.forEach((j) => { this._text(j as string); this._pp.line(); });
                 });
-                this._pp.removeIndent().indent().string(`</pre>`).line();
+                this._pp.string(`</pre>`).line();
                 break;
             }
             case 'code': {
-                this._pp.indent().string(`<pre class="code code-${n.arg}">`).line().addIndent();
+                this._pp.indent().string(`<pre class="code code-${n.arg}">`);
                 n.text.forEach((v) => {
                     v.forEach((j) => { this._text(j as string); this._pp.line(); });
                 });
-                this._pp.removeIndent().indent().string(`</pre>`).line();
+                this._pp.string(`</pre>`).line();
                 break;
             }
             case 'quote': {
