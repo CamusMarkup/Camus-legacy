@@ -120,8 +120,8 @@ function _parseInline(x: string): ast.CamusLine {
                     // which then we follow the normal procedure.
                     let rewindStash: ast.CamusInlineNode[] = [];
                     while (
-                        (subj.startsWith('~~') && stack[stack.length-1] !== '~~')
-                        || (!subj.startsWith('~~') && (stack[stack.length-1] !== subj[0]))
+                        (subj.startsWith('~~') && stack[stack.length-1] && stack[stack.length-1] !== '~~')
+                        || (!subj.startsWith('~~') && stack[stack.length-1] && (stack[stack.length-1] !== subj[0]))
                     ) {
                         let stashTop = stash.pop()!
                         rewindStash = [
@@ -153,9 +153,14 @@ function _parseInline(x: string): ast.CamusLine {
                     stack.push(subj.startsWith('~~')? '~~' : subj[0]);
                     subj = subj.substring(subj.startsWith('~~')? 2 : 1);
                 }
-            } else if (subj[0] === '\\' && subj[1] && '*/_`~{`'.includes(subj[1])) {
-                _StashPush(subj[1]);
-                subj = subj.substring(2);
+            } else if (subj[0] === '\\') {
+                if (subj[1] && '*/_`~{`'.includes(subj[1])) {
+                    _StashPush(subj[1]);
+                    subj = subj.substring(2);
+                } else {
+                    _StashPush(subj[0]);
+                    subj = subj.substring(1);
+                }
             } else {
                 let i = 0;
                 while (subj[i] && !'*/_~`\\'.includes(subj[i]) && !_checkIfSpecialTreatmentRequiredInline(subj.substring(i))) {
@@ -441,6 +446,7 @@ function _parseDocument(x: string[]): ast.CamusLogicLine[] {
 }
 
 export function parse(x: string): ast.CamusLogicLine[] {
-    return _parseDocument(x.split('\n'));
+    let res = _parseDocument(x.split('\n'));
+    return res;
 }
 

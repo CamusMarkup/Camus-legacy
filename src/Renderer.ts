@@ -93,9 +93,10 @@ export class HTMLRenderer {
     }
 
     protected _text(n: string) {
+        let s: string = n;
         if (this._replacePunctuation) {
             if (!this._replacePunctuation.singleQuote && !this._replacePunctuation.doubleQuote) {
-                this._pp.string(n.replace(/--/g, this._replacePunctuation.doubleDash || '--').replace(/-/g, this._replacePunctuation.singleDash || '-'));
+                s = s.replace(/--/g, this._replacePunctuation.doubleDash || '--').replace(/-/g, this._replacePunctuation.singleDash || '-');
             } else {
                 let singleQuote: [string, string] = this._replacePunctuation.singleQuote || ["'", "'"];
                 let doubleQuote: [string, string] = this._replacePunctuation.doubleQuote || ['"', '"'];
@@ -118,11 +119,12 @@ export class HTMLRenderer {
                         }
                     }
                 }
-                this._pp.string(r.join(''));
+                s = r.join('');
             }
         } else {
-            this._pp.string(n);
+            s = n;
         }
+        this._pp.string(s.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
     }
     protected _heading(n: ast.HeadingNode) {
         this._pp.indent().string(`<h${n.level}>`);
