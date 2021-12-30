@@ -1,0 +1,15 @@
+{
+    "name": "",
+    "description": "",
+    "version": "0.0.1",
+    "output": "out",
+    "input": "src",
+    "main": "main",
+    "schema": {
+        "url": "https://cards-modelling-cleword-explore.test.forchange.cn/schema"
+    },
+    "system": {
+        "name": "Cards",
+        "url": "https://cards.cleword.cn/#/system"
+    }
+}
