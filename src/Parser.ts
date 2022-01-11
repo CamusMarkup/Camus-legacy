@@ -154,9 +154,8 @@ function _parseInline(x: string): ast.CamusLine {
                     subj = subj.substring(subj.startsWith('~~')? 2 : 1);
                 }
             } else if (subj[0] === '\\') {
-                if (subj[1] && '*/_`~{`'.includes(subj[1])) {
-                    _StashPush(subj[1]);
-                    subj = subj.substring(2);
+                if (subj[1]) {
+                    _StashPush(subj[1]); subj = subj.substring(2);
                 } else {
                     _StashPush(subj[0]);
                     subj = subj.substring(1);

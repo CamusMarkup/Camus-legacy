@@ -61,7 +61,6 @@ export class HTMLRenderer {
                 }
             }
             this._render(v);
-            this._pp.line();
         });
         if (!noWrapper && firstPassed) {
             this._pp.string('</p>').line();
@@ -124,7 +123,7 @@ export class HTMLRenderer {
         } else {
             s = n;
         }
-        this._pp.string(s.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+        this._pp.string(s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
     }
     protected _heading(n: ast.HeadingNode) {
         this._pp.indent().string(`<h${n.level}>`);
