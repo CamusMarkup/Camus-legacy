@@ -162,7 +162,10 @@ function _parseInline(x: string): ast.CamusLine {
                 }
             } else {
                 let i = 0;
-                while (subj[i] && !'*/_~`\\'.includes(subj[i]) && !_checkIfSpecialTreatmentRequiredInline(subj.substring(i))) {
+                while (subj[i]
+                    && (!'*/_~`\\'.includes(subj[i])
+                        || (subj[i] === '~' && subj[i+1] !== '~'))
+                    && !_checkIfSpecialTreatmentRequiredInline(subj.substring(i))) {
                     i++;
                 }
                 _StashPush(subj.substring(0, i));
