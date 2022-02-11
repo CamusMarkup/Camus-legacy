@@ -448,7 +448,7 @@ function _parseDocument(x: string[]): ast.CamusLogicLine[] {
 }
 
 export function parse(x: string): ast.CamusLogicLine[] {
-    let res = _parseDocument(x.split('\n'));
+    let res = _parseDocument(x.replace(/\r\n/g, '\n').split('\n'));
     return res;
 }
 
