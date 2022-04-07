@@ -52,6 +52,11 @@ The following is demo section.
   ignored region
 #}
 
+#{raw
+    Different from a verbatim region, contents inside a raw
+  region will be rendered totally untouched.
+}
+
 #{quote
     I'm not giving in to security under pressure
     I'm not missing out on the promise of adventure

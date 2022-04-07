@@ -245,6 +245,7 @@ const VERBATIM_BLOCK_TYPES = [
     'verbatim',
     'code',
     'ignore',
+    'raw'
 ]
 
 

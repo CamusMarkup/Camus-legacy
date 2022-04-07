@@ -154,6 +154,12 @@ export class HTMLRenderer {
                 this._pp.string(`</pre>`).line();
                 break;
             }
+            case 'raw': {
+                n.text.forEach((v) => {
+                    v.forEach((j) => { this._pp.string(j as string); this._pp.line(); });
+                });
+                break;
+            }
             case 'quote': {
                 this._pp.indent().string(`<blockquote>`).line().addIndent();
                 n.text.forEach((v) => { this._renderLogicLine(v); });
