@@ -208,12 +208,12 @@ export class HTMLRenderer {
         }
     }
     protected _footnoteRef(n: ast.FootnoteRefNode) {
-        this._pp.string(`<sup><a href="#cite-${n.id}">[${n.id}]</a></sup>`);
+        this._pp.string(`<sup><a name="cite-ret-${n.id}" href="#cite-${n.id}">[${n.id}]</a></sup>`);
     }
     protected _footnoteText(n: ast.FootnoteTextNode) {
         this._pp.indent().string(`<div class="footnote-item">[<a name="cite-${n.id}">${n.id}</a>] `);
         n.text.forEach((v, i) => this._renderLogicLine(v, i === 0));
-        this._pp.removeIndent().indent().string(`</div>`).line();
+        this._pp.removeIndent().indent().string(`  <a href="#cite-ret-${n.id}">&larrhk;</a></div>`).line();
     }
     protected _footnoteBlock(n: ast.FootnoteBlockNode) {
         this._pp.indent().string('<div class="footnote">').line().addIndent();
