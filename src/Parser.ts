@@ -75,7 +75,7 @@ function _parseInline(x: string): ast.CamusLine {
                     break;
                 }
                 case 'img': {
-                    _StashPush({_nodeType: ast.CamusNodeType.Image, url: matchres[3]||'', alt: matchres[2]||''});
+                    _StashPush({_nodeType: ast.CamusNodeType.Image, url: matchres[3]||'', alt: (matchres[2]||'').replace(/\\(.)/g, '$1')});
                     break;
                 }
                 case 'ref': {
