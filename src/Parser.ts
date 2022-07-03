@@ -82,6 +82,10 @@ function _parseInline(x: string): ast.CamusLine {
                     _StashPush({_nodeType: ast.CamusNodeType.Ref, path: matchres[3]||'', text: _parseInline(matchres[2]||'')});
                     break;
                 }
+                case 'wiki': {
+                    _StashPush({_nodeType: ast.CamusNodeType.WikiTag, name: matchres[3]||'', text: _parseInline(matchres[2]||'')});
+                    break;
+                }
                 default: {
                     _StashPush(matchres[0]);
                     break;
@@ -241,13 +245,28 @@ const REGEX_BLOCK_END = /^#\}/;
 const REGEX_UNORDERED_LIST_HEAD = /^(([\+-])(\s+))(.*)/;
 const REGEX_ORDERED_LIST_HEAD = /^(([0-9]+)\.(\s+))(.*)/;
 const REGEX_TRIM_LEFT = /^(\s*)/;
+const REGEX_TABLE_CELL = /^((?:\\\||[^|])*)(\|)?/;
 const VERBATIM_BLOCK_TYPES = [
     'verbatim',
     'code',
     'ignore',
     'raw'
-]
+];
 
+function _splitTableCell(x: string): string[] {
+    let res: string[] = [];
+    let subj = x;
+    while (subj.length > 0) {
+        let matchres = REGEX_TABLE_CELL.exec(subj);
+        if (!matchres) {
+            res.push(subj);
+            break;
+        }
+        res.push(matchres[1]);
+        subj = subj.substring(matchres[0].length);
+    }
+    return res;
+}
 
 function _checkIfSpecialTreatmentRequired(x: string): boolean {
     return !!(
@@ -310,12 +329,34 @@ function _parseSingleLogicLine(x: string[], n: number): [ast.CamusLogicLine, num
         i++;
         
         let subdocNoIndent = subdoc.map((v) => v.substring(minindent))
-        let subdocRes: ast.CamusBlockNode =
-            {_nodeType: ast.CamusNodeType.Block,
-                type: type,
-                arg: args,
-                text: VERBATIM_BLOCK_TYPES.includes(type)? subdocNoIndent.map((v) => [v]) : _parseDocument(subdocNoIndent)
-            };
+        let subdocRes: ast.CamusBlockNode;
+        if (type.toLowerCase() === 'table') {
+            let section1: ast.CamusLine[][] = [];
+            let section2: ast.CamusLine[][] = [];
+            let subj = section1;
+            let isHeadSeparatorPassed = false;
+            subdocNoIndent.forEach((v) => {
+                if (!REGEX_HORIZONTAL_RULE.exec(v)) {
+                    subj.push(_splitTableCell(v).map((v) => _parseInline(v)));
+                } else {
+                    subj = section2;
+                    isHeadSeparatorPassed = true;
+                }
+            });
+            subdocRes =
+                {_nodeType: ast.CamusNodeType.Table,
+                    header: (isHeadSeparatorPassed || section2.length <= 0)? section1 : [],
+                    body: (isHeadSeparatorPassed || section2.length <= 0)? section2 : section1,
+                };
+        } else {
+
+            subdocRes =
+                {_nodeType: ast.CamusNodeType.Block,
+                    type: type,
+                    arg: args,
+                    text: VERBATIM_BLOCK_TYPES.includes(type)? subdocNoIndent.map((v) => [v]) : _parseDocument(subdocNoIndent)
+                };
+        }
         
         return [
             [subdocRes],

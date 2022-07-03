@@ -19,6 +19,8 @@ export enum CamusNodeType {
     FootnoteRef,
     FootnoteText,
     FootnoteBlock,
+    Table,
+    WikiTag,
     Tag,
     Image,
     List,
@@ -68,6 +70,12 @@ export type RefNode = {
     text: CamusLine,
 };
 
+export type WikiTagNode = {
+    _nodeType: CamusNodeType.WikiTag,
+    name: string,
+    text: CamusLine,
+}
+
 export type FootnoteRefNode = {
     _nodeType: CamusNodeType.FootnoteRef,
     id: string,
@@ -93,6 +101,12 @@ export type ListNode = {
     items: ListItemNode[]
 };
 
+export type TableNode = {
+    _nodeType: CamusNodeType.Table,
+    header: CamusLine[][],
+    body: CamusLine[][],
+}
+
 export type ListItemNode = {
     _nodeType: CamusNodeType.ListItem,
     text: CamusLogicLine[],
@@ -103,7 +117,7 @@ export type HorizontalRuleNode = {
 }
 
 // NOTE: atomic node means an inline node that cannot contain a child node.
-export type CamusAtomicNode = string | LinkNode | RefNode | FootnoteRefNode | InlineIgnoreNode | ImageNode | TagNode;
+export type CamusAtomicNode = string | LinkNode | RefNode | FootnoteRefNode | InlineIgnoreNode | ImageNode | TagNode | WikiTagNode;
 export function isCamusAtomicNode(x: CamusNode): x is CamusAtomicNode {
     return typeof x === 'string' || [
         CamusNodeType.Link,
@@ -113,6 +127,7 @@ export function isCamusAtomicNode(x: CamusNode): x is CamusAtomicNode {
         CamusNodeType.InlineIgnore,
         CamusNodeType.Image,
         CamusNodeType.Tag,
+        CamusNodeType.WikiTag,
     ].includes(x._nodeType);
 }
 export type CamusInlineNode = InlineStyleNode | CamusAtomicNode;
@@ -132,7 +147,7 @@ export function isCamusLineNode(x: CamusNode): x is CamusLineNode {
     ].includes(x._nodeType);
 }
 export type CamusLogicLine = CamusNode[]
-export type CamusBlockNode = BlockNode | ListNode | FootnoteBlockNode;
+export type CamusBlockNode = BlockNode | ListNode | FootnoteBlockNode | TableNode;
 export function isCamusBlockNode(x: CamusNode): x is CamusBlockNode {
     return typeof x !== 'string' && [
         CamusNodeType.Block,

@@ -27,6 +27,8 @@ The following is demo section.
 
 {footnote@1}  {footnote@2}
 
+{wiki:Some Stuff}{wiki(Displayed Stuff):Some Stuff} (only works with `camus-cli`)
+
 {#tag-name}
 
 > This beat is mine
@@ -38,6 +40,14 @@ The following is demo section.
 > You can have it
 > Just party down
 > And do what you wanna do (But do that dance)
+
+#{table
+concept|unifies
+------
+table-header|scopable blocks|functions, methods, closures
+prototypes|objects, classes, namespaces, locals
+messages|operators, calls, assigns, var access
+#}
 
 #{verbatim
     Tonight, before you lay down to the sweetness of your sleep

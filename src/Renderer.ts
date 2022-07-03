@@ -81,6 +81,7 @@ export class HTMLRenderer {
                 case ast.CamusNodeType.FootnoteText: { this._footnoteText(x); break; }
                 case ast.CamusNodeType.FootnoteBlock: { this._footnoteBlock(x); break; }
                 case ast.CamusNodeType.Image: { this._image(x); break; }
+                case ast.CamusNodeType.Table: { this._table(x); break; }
                 case ast.CamusNodeType.List: { this._list(x); break; }
                 case ast.CamusNodeType.InlineIgnore: { break; }
                 case ast.CamusNodeType.HorizontalRule: { this._pp.line().indent().string('<hr />').line(); break; }
@@ -132,6 +133,36 @@ export class HTMLRenderer {
     }
     protected _tag(n: ast.TagNode) {
         this._pp.string(`<a name="${n.id}"></a>`);
+    }
+    protected _table(n: ast.TableNode) {
+        this._pp.indent().string('<table>').line().addIndent();
+        if (n.header.length > 0) {
+            this._pp.indent().string('<thead>').line().addIndent();
+            n.header.forEach((r) => {
+                this._pp.indent().string('<tr>').line().addIndent();
+                r.forEach((j) => {
+                    this._pp.indent().string('<th>').line().addIndent();
+                    this._renderLine(j);
+                    this._pp.removeIndent().indent().string('</th>').line();
+                });
+                this._pp.removeIndent().indent().string('</tr>').line();
+            });
+            this._pp.removeIndent().indent().string('</thead>').line();
+        }
+        if (n.body.length > 0) {
+            this._pp.indent().string('<tbody>').line().addIndent();
+            n.body.forEach((r) => {
+                this._pp.indent().string('<tr>').line().addIndent();
+                r.forEach((j) => {
+                    this._pp.indent().string('<td>').line().addIndent();
+                    this._renderLine(j);
+                    this._pp.removeIndent().indent().string('</td>').line();
+                });
+                this._pp.removeIndent().indent().string('</tr>').line();
+            });
+            this._pp.removeIndent().indent().string('</tbody>').line();
+        }
+        this._pp.removeIndent().indent().string(`</table>`).line();
     }
     protected _block(n: ast.BlockNode) {
         if (n.type === 'ignore') { return; }
