@@ -5,6 +5,7 @@ const REGEX_BRACE_TAG = /^\{([a-zA-Z0-9]+)(?:\(((?:\\\)|[^)])*)\))?:((?:\\\}|[^}
 const REGEX_FOOTNOTE_TAG = /^\{footnote@((?:\\\}|\\\]|[^}\]\s])*)\}/;
 const REGEX_HASH_TAG = /^\{#((?:\\\}|[^}])*)\}/;
 
+const REGEX_SUPSUB_TEXT = /^\{((?:\\\}|[^}])*?)\}/;
 
 
 function _checkIfSpecialTreatmentRequiredInline(x: string): boolean {
@@ -63,7 +64,7 @@ function _parseInline(x: string): ast.CamusLine {
     };
     while (subj) {
         if (matchres = REGEX_FOOTNOTE_TAG.exec(subj)) {
-            _StashPush({_nodeType: ast.CamusNodeType.FootnoteRef, id: matchres[1]});
+            _StashPush({_nodeType: ast.CamusNodeType.FootnoteRef, idList: matchres[1].split(',').map((v) => v.trim())});
             subj = subj.substring(matchres[0].length);
         } else if (matchres = REGEX_HASH_TAG.exec(subj)) {
             _StashPush({_nodeType: ast.CamusNodeType.Tag, id: matchres[1]});
@@ -92,9 +93,41 @@ function _parseInline(x: string): ast.CamusLine {
                 }
             }
             subj = subj.substring(matchres[0].length);
+        } else if (subj[0] === '^') {    // superscript
+            subj = subj.substring(1);
+            if (!subj[0]) { _StashPush('^'); }
+            else {
+                matchres = REGEX_SUPSUB_TEXT.exec(subj);
+                if (!matchres) {
+                    _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['super'], text: [subj[0]]})
+                    subj = subj.substring(1);
+                } else {
+                    _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['super'], text: _parseInline(matchres[1])});
+                    subj = subj.substring(matchres[0].length);
+                }
+            }
+        } else if (subj[0] === '_' && subj[1] && subj[1] !== '_') {    // subscript
+            subj = subj.substring(1);
+            if (!subj[0]) { _StashPush('_'); }
+            else {
+                matchres = REGEX_SUPSUB_TEXT.exec(subj);
+                if (!matchres) {
+                    _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['sub'], text: [subj[0]]})
+                    subj = subj.substring(1);
+                } else {
+                    _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['sub'], text: _parseInline(matchres[1])});
+                    subj = subj.substring(matchres[0].length);
+                }
+            }
         } else {
-            if ('*/_`'.includes(subj[0]) || subj.startsWith('~~')) {
-                if (stack.includes(subj[0]) || (subj.startsWith('~~') && stack.includes('~~'))) {
+            if ('*/`'.includes(subj[0])
+                    || subj.startsWith('~~')
+                    || subj.startsWith('__')
+                    || subj.startsWith('{=') || subj.startsWith('=}')) {
+                if (stack.includes(subj[0])
+                    || (subj.startsWith('~~') && stack.includes('~~'))
+                    || (subj.startsWith('__') && stack.includes('__'))
+                    || (subj.startsWith('=}') && stack.includes('{='))) {
                     // x[0] in stack.
                     // NOTE: now there's a problem. if we have an input like this:
                     //     *_bold underline*_
@@ -125,7 +158,10 @@ function _parseInline(x: string): ast.CamusLine {
                     let rewindStash: ast.CamusInlineNode[] = [];
                     while (
                         (subj.startsWith('~~') && stack[stack.length-1] && stack[stack.length-1] !== '~~')
-                        || (!subj.startsWith('~~') && stack[stack.length-1] && (stack[stack.length-1] !== subj[0]))
+                        || (subj.startsWith('__') && stack[stack.length-1] && stack[stack.length-1] !== '__')
+                        || (subj.startsWith('=}') && stack[stack.length-1] && stack[stack.length-1] !== '{=')
+                        || (!subj.startsWith('~~') && !subj.startsWith('__') && !subj.startsWith('=}')
+                                && stack[stack.length-1] && (stack[stack.length-1] !== subj[0]))
                     ) {
                         let stashTop = stash.pop()!
                         rewindStash = [
@@ -138,24 +174,25 @@ function _parseInline(x: string): ast.CamusLine {
                     ASSERT('stashTop should an array.', Array.isArray(stashTop));
                     stash[stash.length-1] = [...stashTop, ...rewindStash];
                     // now we resolve stack top:
-                    let styleArray: ('bold'|'italics'|'underline'|'delete'|'code')[] = [];
+                    let styleArray: ('bold'|'italics'|'underline'|'delete'|'highlight'|'code')[] = [];
                     let s = stack.pop();
                     styleArray.push(
                         s === '*'? 'bold'
                         : s === '/'? 'italics'
-                        : s === '_'? 'underline'
+                        : s === '__'? 'underline'
                         : s === '`'? 'code'
+                        : s === '{='? 'highlight'
                         : 'delete'
                     );
                     let lastStashTop = stash.pop();
                     let newNode: ast.InlineStyleNode = {_nodeType: ast.CamusNodeType.InlineStyle, style: styleArray, text: lastStashTop as any};
                     _StashPush(newNode);
-                    subj = subj.substring(subj.startsWith('~~')? 2 : 1);
+                    subj = subj.substring((subj.startsWith('~~') || subj.startsWith('__') || subj.startsWith('=}'))? 2 : 1);
                 } else {
                     // x[0] not in stack.
                     stash.push([]);
-                    stack.push(subj.startsWith('~~')? '~~' : subj[0]);
-                    subj = subj.substring(subj.startsWith('~~')? 2 : 1);
+                    stack.push(subj.startsWith('~~')? '~~' : subj.startsWith('__')? '__' : subj.startsWith('{=')? '{=' : subj[0]);
+                    subj = subj.substring((subj.startsWith('~~') || subj.startsWith('__') ||  subj.startsWith('{='))? 2 : 1);
                 }
             } else if (subj[0] === '\\') {
                 if (subj[1]) {
@@ -167,8 +204,9 @@ function _parseInline(x: string): ast.CamusLine {
             } else {
                 let i = 0;
                 while (subj[i]
-                    && (!'*/_~`\\'.includes(subj[i])
-                        || (subj[i] === '~' && subj[i+1] !== '~'))
+                    && (!'*/_~^=`\\'.includes(subj[i])
+                        || (subj[i] === '~' && subj[i+1] !== '~')
+                        || (subj[i] === '=' && subj[i+1] !== '}'))
                     && !_checkIfSpecialTreatmentRequiredInline(subj.substring(i))) {
                     i++;
                 }

@@ -1,6 +1,6 @@
 {
   "name": "@bctnry/camus-core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A markup language",
   "main": "out/main.js",
   "bin": {
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/CamusMarkup/Camus#readme",
   "devDependencies": {
+    "@types/node": "^18.11.9",
     "typescript": "^4.5.2"
   }
 }

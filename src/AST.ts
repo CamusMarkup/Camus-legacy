@@ -44,7 +44,7 @@ export type BlockNode = {
 
 export type InlineStyleNode = {
     _nodeType: CamusNodeType.InlineStyle,
-    style: ('bold'|'italics'|'underline'|'delete'|'code')[],
+    style: ('bold'|'italics'|'underline'|'delete'|'code'|'super'|'sub'|'highlight')[],
     text: CamusLine,
 }
 
@@ -78,7 +78,7 @@ export type WikiTagNode = {
 
 export type FootnoteRefNode = {
     _nodeType: CamusNodeType.FootnoteRef,
-    id: string,
+    idList: string[],
 };
 export type FootnoteTextNode = {
     _nodeType: CamusNodeType.FootnoteText,

@@ -208,8 +208,29 @@ export class HTMLRenderer {
         return;
     }
     protected _inlineStyle(n: ast.InlineStyleNode) {
-        let start = n.style.map((v) => `<${v}>`).join('').replace(/bold/g, 'b').replace(/italics/g, 'i').replace(/underline/g, 'span style="text-decoration:underline"').replace(/delete/g, 'del').replace(/code/g, 'code');
-        let end = n.style.map((v) => `</${v}>`).join('').replace(/bold/g, 'b').replace(/italics/g, 'i').replace(/underline/g, 'span').replace(/delete/g, 'del').replace(/code/g, 'code');
+
+        let startingDict = {
+            'bold': 'b',
+            'italics': 'i',
+            'underline': 'span style="text-decoration:underline"',
+            'delete': 'del',
+            'code': 'code',
+            'super': 'sup',
+            'sub': 'sub',
+            'highlight': 'mark',
+        };
+        let endingDict = {
+            'bold': 'b',
+            'italics': 'i',
+            'underline': 'span',
+            'delete': 'del',
+            'code': 'code',
+            'super': 'sup',
+            'sub': 'sub',
+            'highlight': 'mark',
+        }
+        let start = n.style.map((v) => `<${startingDict[v]}>`).join('');
+        let end = n.style.reverse().map((v) => `</${endingDict[v]}>`).join('');
         this._pp.string(start);
         this._renderLine(n.text);
         this._pp.string(end);
@@ -239,7 +260,7 @@ export class HTMLRenderer {
         }
     }
     protected _footnoteRef(n: ast.FootnoteRefNode) {
-        this._pp.string(`<sup><a name="cite-ret-${n.id}" href="#cite-${n.id}">[${n.id}]</a></sup>`);
+        this._pp.string(`<sup>[${n.idList.map((v) => `<a name="cite-ret-${v}" href="#cite-${v}">${v}</a>`).join(',')}]</sup>`);
     }
     protected _footnoteText(n: ast.FootnoteTextNode) {
         this._pp.indent().string(`<div class="footnote-item">[<a name="cite-${n.id}">${n.id}</a>] `);

@@ -1,4 +1,6 @@
-= Camus: A humble markup language
+= {#tag-node} Camus: A humble markup language
+
+
 
 {img(logo):https://camusmarkup.github.io/camus-icon.png}
 
@@ -17,7 +19,9 @@ The following is demo section.
 
 5 dash or more will be converted to horizontal ruler.
 
-*bold* /italics/ _underline_ ~~delete~~ `inline code`
+*bold* /italics/ __underline__ ~~delete~~ `inline code`
+
+{=highlight text=} a^b a_b a^{superscript} a_{subscript}
 
 {img:https://img_link} {img(alt):https://img_link}
 
@@ -25,11 +29,10 @@ The following is demo section.
 
 {ref:other_cm3_file.cm3}
 
-{footnote@1}  {footnote@2}
+{footnote@1}  {footnote@2}  {footnote@3,4}
 
 {wiki:Some Stuff}{wiki(Displayed Stuff):Some Stuff} (only works with `camus-cli`)
 
-{#tag-name}
 
 > This beat is mine
 > You can have it
