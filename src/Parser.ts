@@ -2,9 +2,9 @@ import { ASSERT } from './Assert';
 import * as ast from './AST';
 
 const REGEX_BRACE_TAG = /^\{([a-zA-Z0-9]+)(?:\(((?:\\\)|[^)])*)\))?:((?:\\\}|[^}])*)\}/;
+const REGEX_BRACE_TAG_NAMESPACE = /^([^/]*?)\/(.*)/;
 const REGEX_FOOTNOTE_TAG = /^\{footnote@((?:\\\}|\\\]|[^}\]\s])*)\}/;
 const REGEX_HASH_TAG = /^\{#((?:\\\}|[^}])*)\}/;
-
 const REGEX_SUPSUB_TEXT = /^\{((?:\\\}|[^}])*?)\}/;
 
 
@@ -17,7 +17,6 @@ function _checkIfSpecialTreatmentRequiredInline(x: string): boolean {
 }
 
 /*
-
 
 normal *bold _boldu ~~budelete~~ boldu __ bold*
 
@@ -88,7 +87,18 @@ function _parseInline(x: string): ast.CamusLine {
                     break;
                 }
                 default: {
-                    _StashPush(matchres[0]);
+                    // NOTE: match qualified ref.
+                    let matchres2 = REGEX_BRACE_TAG_NAMESPACE.exec(matchres[1]);
+                    if (matchres2 && matchres2[2] === 'ref') {
+                        _StashPush({
+                            _nodeType: ast.CamusNodeType.Ref,
+                            namespace: matchres2[1],
+                            path: matchres[3]||'',
+                            text: _parseInline(matchres[2]||'')
+                        });
+                    } else {
+                        _StashPush(matchres[0]);
+                    }
                     break;
                 }
             }
@@ -275,6 +285,7 @@ function _parseInline(x: string): ast.CamusLine {
 //             indent is removed to form the parsing result.
 //         b.  if for any reasons you need to write `#}` with no indent, write `\#}`.
 const REGEX_HEADING = /^(={1,6})\s+(.*)$/;
+const REGEX_ADV_TITLE = /^=([_^]?)\s+(.*)$/;
 const REGEX_FOOTNOTE_TEXT = /^(\[((?:\\\}|\\\]|[^}\]\s])*)\]:\s*)(.*)$/;
 const REGEX_HORIZONTAL_RULE = /^-{5,}/;
 const REGEX_QUOTE = /^(>\s+)(.*)/;
@@ -309,6 +320,7 @@ function _splitTableCell(x: string): string[] {
 function _checkIfSpecialTreatmentRequired(x: string): boolean {
     return !!(
         REGEX_HEADING.exec(x)
+        || REGEX_ADV_TITLE.exec(x)
         || REGEX_FOOTNOTE_TEXT.exec(x)
         || REGEX_HORIZONTAL_RULE.exec(x)
         || REGEX_QUOTE.exec(x)
@@ -326,6 +338,32 @@ function _parseSingleLogicLine(x: string[], n: number): [ast.CamusLogicLine, num
         return [
             [{_nodeType: ast.CamusNodeType.Heading, level: matchres[1].length, text: _parseInline(matchres[2].trim())}],
             n+1
+        ];
+    } else if (matchres = REGEX_ADV_TITLE.exec(x[n])) {
+        let topTitle: ast.CamusLine|undefined = undefined;
+        let mainTitle: ast.CamusLine = [];
+        let subtitle: ast.CamusLine|undefined = undefined;
+        let i = n;
+        while ((x[i] !== undefined) && (matchres = REGEX_ADV_TITLE.exec(x[i]))) {
+            switch (matchres[1]) {
+                case undefined: {
+                    mainTitle = _parseInline(matchres[2].trim());
+                    break;
+                }
+                case '^': {
+                    topTitle = _parseInline(matchres[2].trim());
+                    break;
+                }
+                case '_' : {
+                    subtitle = _parseInline(matchres[2].trim());
+                    break;
+                }
+            }
+            i++;
+        }
+        return [
+            [{_nodeType: ast.CamusNodeType.AdvancedTitle, mainTitle: mainTitle, topTitle: topTitle, subtitle: subtitle}],
+            i
         ];
     } else if (matchres = REGEX_HORIZONTAL_RULE.exec(x[n])) {
         return [
@@ -367,8 +405,17 @@ function _parseSingleLogicLine(x: string[], n: number): [ast.CamusLogicLine, num
         i++;
         
         let subdocNoIndent = subdoc.map((v) => v.substring(minindent))
+        // NOTE(2023.3.15)(Camus2): from now on all raw output blocks will have a block type
+        //                          started with an `=`.
+        let typeLc = type.toLowerCase();
         let subdocRes: ast.CamusBlockNode;
-        if (type.toLowerCase() === 'table') {
+        if (typeLc.startsWith('=')) {
+            subdocRes =
+                {_nodeType: ast.CamusNodeType.RawOutput,
+                    type: typeLc.substring(1),
+                    data: subdocNoIndent
+                };
+        } else if (typeLc === 'table') {
             let section1: ast.CamusLine[][] = [];
             let section2: ast.CamusLine[][] = [];
             let subj = section1;
@@ -386,8 +433,35 @@ function _parseSingleLogicLine(x: string[], n: number): [ast.CamusLogicLine, num
                     header: (isHeadSeparatorPassed || section2.length <= 0)? section1 : [],
                     body: (isHeadSeparatorPassed || section2.length <= 0)? section2 : section1,
                 };
+        } else if (typeLc === 'metadata') {
+            let data: {[key: string]: string} = {};
+            subdocNoIndent.forEach((v) => {
+                let z = v.split(':');
+                // NOTE: we don't deal with lines without a key.
+                if (z.length >= 2) {
+                    data[z[0].trim()] = v.substring(z[0].length).trim();
+                }
+            });
+            subdocRes = 
+                {_nodeType: ast.CamusNodeType.Metadata,
+                    data: data
+                };
+        } else if (typeLc === 'title') {
+            let data: {[key: string]: string} = {};
+            subdocNoIndent.forEach((v) => {
+                let z = v.split(':');
+                // NOTE: we don't deal with lines without a key.
+                if (z.length >= 2) {
+                    data[z[0].trim()] = v.substring(z[0].length).trim();
+                }
+            });
+            subdocRes = 
+                {_nodeType: ast.CamusNodeType.AdvancedTitle,
+                    topTitle: _parseInline(data['top-title'].trim()),
+                    mainTitle: _parseInline(data['title'].trim()),
+                    subtitle: _parseInline(data['subtitle'].trim()),
+                };
         } else {
-
             subdocRes =
                 {_nodeType: ast.CamusNodeType.Block,
                     type: type,
@@ -395,7 +469,7 @@ function _parseSingleLogicLine(x: string[], n: number): [ast.CamusLogicLine, num
                     text: VERBATIM_BLOCK_TYPES.includes(type)? subdocNoIndent.map((v) => [v]) : _parseDocument(subdocNoIndent)
                 };
         }
-        
+
         return [
             [subdocRes],
             i

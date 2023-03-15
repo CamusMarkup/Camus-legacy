@@ -1,0 +1,42 @@
+= Core Library Manual 
+
+`@bctnry/camus-core` contains a basic HTML render and a text/gemini renderer.
+
+
+== Implementation-specific behaviours
+
+=== References
+
+The HTML renderer that comes with the core library only supports normal ref (i.e. ref with no specified namespace) that are tag-only; for any other types of references (includes wiki ref and ref with namespace) the renderer outputs empty strings. To change this behaviour you have to write your own handling routine.
+
+=== Raw output block
+
+Currently only `=html` and `=latex` is planned.
+
+=== Global state flags
+
+The supported flag names are listed as follows:
+
++ `smart-punctuation`:
+  + `enabled`: from this point on, enable smart punctuation.
+  + `disabled`: from this point on, disable smart punctuation.
++ `ordered-list-style`: the next complete ordered list will have the specified bullet style. The value for this flag consists of two parts: the numbering and the punctuation. The two parts are separated by a single comma `,`.
+
+  For the numbering:
+
+  + `number`: all the bullets use numbers, e.g. `1.`, `2.`, `3.`
+  + `lower-alpha`: all the bullets use lowercase alphabets, e.g. `a.`, `b.`, `c.`
+  + `upper-alpha`: all the bullets use uppercase alphabets, e.g. `A.`, `B.`, `C.`
+  + `lower-roman`: all the bullets use lowercase roman numerals, e.g. `i.`, `ii.`, `iii.`, `iv.`
+  + `upper-roman`: all the bullets use uppercase roman numerals, e.g. `I.`, `II.`, `III.`, `IV.`.
+  
+  for the punctuation:
+  + `period`: the bullet is followed by a single period, like in `1.`, `ii.`, `c.`.
+  + `right-paren`: the bullet is followed by a single right parenthesis, like in `1)`, `ii)`, `c)`.
+  + `full-paren`: the bullet is wrapped inside a pair of parentheses, like in `(1)`, `(ii)`, `(c)`.
+
++ `marking-style`:
+  + `highlight-only`: both `\_\_ ... \_\_` and `\{= ... =}` denote highlighting.
+  + `underline-only`: both `\_\_ ... \_\_` and `\{= ... =}` denote underlining.
+  + `both`: `\_\_ ... \_\_` denotes underlining and `\{= ... =}` denotes highlighting. The default option.
+

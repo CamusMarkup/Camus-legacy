@@ -1,6 +1,6 @@
 # Camus
 
-A markup language that tries to be humble.
+The markup language for personal knowledge base.
 
 ## Install
 

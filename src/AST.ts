@@ -26,6 +26,9 @@ export enum CamusNodeType {
     List,
     ListItem,
     HorizontalRule,
+    Metadata,
+    RawOutput,
+    AdvancedTitle,
 }
 
 export type HeadingNode = {
@@ -41,6 +44,24 @@ export type BlockNode = {
     arg: string,
     text: CamusLogicLine[],
 };
+
+export type MetadataNode = {
+    _nodeType: CamusNodeType.Metadata,
+    data: { [name: string]: string},
+};
+
+export type RawOutputNode = {
+    _nodeType: CamusNodeType.RawOutput,
+    type: string,
+    data: string[],
+};
+
+export type AdvancedTitleNode = {
+    _nodeType: CamusNodeType.AdvancedTitle,
+    topTitle?: CamusLine,
+    mainTitle: CamusLine,
+    subtitle?: CamusLine,
+}
 
 export type InlineStyleNode = {
     _nodeType: CamusNodeType.InlineStyle,
@@ -59,6 +80,8 @@ export type LinkNode = {
     text: CamusLine,
 };
 
+// NOTE: this is for "hash tag" which works similar as an <a> tag set with
+//       a `name` attribute.
 export type TagNode = {
     _nodeType: CamusNodeType.Tag,
     id: string,
@@ -66,6 +89,7 @@ export type TagNode = {
 
 export type RefNode = {
     _nodeType: CamusNodeType.Ref,
+    namespace?: string,
     path: string,
     text: CamusLine,
 };
@@ -147,10 +171,13 @@ export function isCamusLineNode(x: CamusNode): x is CamusLineNode {
     ].includes(x._nodeType);
 }
 export type CamusLogicLine = CamusNode[]
-export type CamusBlockNode = BlockNode | ListNode | FootnoteBlockNode | TableNode;
+export type CamusBlockNode = BlockNode | MetadataNode | RawOutputNode | AdvancedTitleNode | ListNode | FootnoteBlockNode | TableNode;
 export function isCamusBlockNode(x: CamusNode): x is CamusBlockNode {
     return typeof x !== 'string' && [
         CamusNodeType.Block,
+        CamusNodeType.Metadata,
+        CamusNodeType.RawOutput,
+        CamusNodeType.AdvancedTitle,
         CamusNodeType.List,
         CamusNodeType.FootnoteBlock,
     ].includes(x._nodeType);
