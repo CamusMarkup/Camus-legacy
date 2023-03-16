@@ -103,17 +103,41 @@ function _parseInline(x: string): ast.CamusLine {
                 }
             }
             subj = subj.substring(matchres[0].length);
+        } else if (subj[0] === '^') {    // superscript
+            subj = subj.substring(1);
+            if (!subj[0]) { _StashPush('^'); }
+            else {
+                matchres = REGEX_SUPSUB_TEXT.exec(subj);
+                if (!matchres) {
+                    _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['super'], text: [subj[0]]})
+                    subj = subj.substring(1);
+                } else {
+                    _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['super'], text: _parseInline(matchres[1])});
+                    subj = subj.substring(matchres[0].length);
+                }
+            }
+        } else if (subj[0] === '_' && subj[1] && subj[1] !== '_') {    // subscript
+            subj = subj.substring(1);
+            if (!subj[0]) { _StashPush('_'); }
+            else {
+                matchres = REGEX_SUPSUB_TEXT.exec(subj);
+                if (!matchres) {
+                    _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['sub'], text: [subj[0]]})
+                    subj = subj.substring(1);
+                } else {
+                    _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['sub'], text: _parseInline(matchres[1])});
+                    subj = subj.substring(matchres[0].length);
+                }
+            }
         } else {
             if ('*/`'.includes(subj[0])
                     || subj.startsWith('~~')
                     || subj.startsWith('__')
-                    || subj.startsWith('{=') || subj.startsWith('=}')
-                    || subj.startsWith('^{') || subj.startsWith('_{') || subj.startsWith('}')) {
+                    || subj.startsWith('{=') || subj.startsWith('=}')) {
                 if (stack.includes(subj[0])
                     || (subj.startsWith('~~') && stack.includes('~~'))
                     || (subj.startsWith('__') && stack.includes('__'))
-                    || (subj.startsWith('=}') && stack.includes('{='))
-                    || (subj.startsWith('}') && (stack.includes('^{') || stack.includes('_{')))) {
+                    || (subj.startsWith('=}') && stack.includes('{='))) {
                     // x[0] in stack.
                     // NOTE: now there's a problem. if we have an input like this:
                     //     *_bold underline*_
@@ -157,10 +181,10 @@ function _parseInline(x: string): ast.CamusLine {
                         ];
                     }
                     let stashTop = stash[stash.length-1] as ast.CamusLine;
-                    ASSERT('stashTop should be an array.', Array.isArray(stashTop));
+                    ASSERT('stashTop should an array.', Array.isArray(stashTop));
                     stash[stash.length-1] = [...stashTop, ...rewindStash];
                     // now we resolve stack top:
-                    let styleArray: ('bold'|'italics'|'underline'|'delete'|'highlight'|'code'|'super'|'sub')[] = [];
+                    let styleArray: ('bold'|'italics'|'underline'|'delete'|'highlight'|'code')[] = [];
                     let s = stack.pop();
                     styleArray.push(
                         s === '*'? 'bold'
@@ -168,8 +192,6 @@ function _parseInline(x: string): ast.CamusLine {
                         : s === '__'? 'underline'
                         : s === '`'? 'code'
                         : s === '{='? 'highlight'
-                        : s === '^{'? 'super'
-                        : s === '_{'? 'sub'
                         : 'delete'
                     );
                     let lastStashTop = stash.pop();
@@ -179,38 +201,8 @@ function _parseInline(x: string): ast.CamusLine {
                 } else {
                     // x[0] not in stack.
                     stash.push([]);
-                    stack.push(
-                        ['~~', '__', '{=', '^{', '_{'].includes(subj.substring(0, 2))? subj.substring(0, 2) : subj[0]
-                    );
-                    subj = subj.substring(
-                        ['~~', '__', '{=', '^{', '_{'].includes(subj.substring(0, 2))? 2 : 1
-                    );
-                }
-            } else if (subj[0] === '^') {    // superscript
-                subj = subj.substring(1);
-                if (!subj[0]) { _StashPush('^'); }
-                else {
-                    matchres = REGEX_SUPSUB_TEXT.exec(subj);
-                    if (!matchres) {
-                        _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['super'], text: [subj[0]]})
-                        subj = subj.substring(1);
-                    } else {
-                        _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['super'], text: _parseInline(matchres[1])});
-                        subj = subj.substring(matchres[0].length);
-                    }
-                }
-            } else if (subj[0] === '_' && subj[1] && subj[1] !== '_') {    // subscript
-                subj = subj.substring(1);
-                if (!subj[0]) { _StashPush('_'); }
-                else {
-                    matchres = REGEX_SUPSUB_TEXT.exec(subj);
-                    if (!matchres) {
-                        _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['sub'], text: [subj[0]]})
-                        subj = subj.substring(1);
-                    } else {
-                        _StashPush({_nodeType: ast.CamusNodeType.InlineStyle, style: ['sub'], text: _parseInline(matchres[1])});
-                        subj = subj.substring(matchres[0].length);
-                    }
+                    stack.push(subj.startsWith('~~')? '~~' : subj.startsWith('__')? '__' : subj.startsWith('{=')? '{=' : subj[0]);
+                    subj = subj.substring((subj.startsWith('~~') || subj.startsWith('__') ||  subj.startsWith('{='))? 2 : 1);
                 }
             } else if (subj[0] === '\\') {
                 if (subj[1]) {
@@ -369,8 +361,14 @@ function _parseSingleLogicLine(x: string[], n: number): [ast.CamusLogicLine, num
             }
             i++;
         }
+        // NOTE: if there's no top title & there's no subtitle it should be considered
+        //       as a single level 1 header.
         return [
-            [{_nodeType: ast.CamusNodeType.AdvancedTitle, mainTitle: mainTitle, topTitle: topTitle, subtitle: subtitle}],
+            [
+                (!topTitle && !subtitle)?
+                {_nodeType: ast.CamusNodeType.Heading, level: 1, text: mainTitle}
+                : {_nodeType: ast.CamusNodeType.AdvancedTitle, mainTitle: mainTitle, topTitle: topTitle, subtitle: subtitle}
+            ],
             i
         ];
     } else if (matchres = REGEX_HORIZONTAL_RULE.exec(x[n])) {

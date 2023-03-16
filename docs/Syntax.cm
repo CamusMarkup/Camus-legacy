@@ -27,7 +27,7 @@ Headers all starts with `=`. The number of `=` determines the level of header (e
 + References and wiki references (described below)
 + Tags (described below)
 + Footnote refs
-+ Global state flags (described below)
++ (In Camus 2) Global state flags (described below)
 
 (There's also this thing called "atomic nodes"; this category covers all of the above and .)
 
@@ -57,7 +57,7 @@ text\*|bold, underline, italics|starting sequence for italics
 
 === Superscripts and subscripts
 
-In Camus these twos are similar to those in LaTeX:
+In Camus 2 these twos are similar to those in LaTeX:
 
 + Superscripts start with `\^` and subscripts start with `\_`.
 + If the character immediately after `\^` and `\_` is not `\{` then the character itself is rendered as superscript or subscripts.
@@ -67,6 +67,10 @@ In Camus these twos are similar to those in LaTeX:
 
 The syntax for footnotes is `\{footnote@/footnote-ref-list/\}`, where `footnote-ref-list` is a list of footnote id (described below in the "footnote text" section) separated with `,`.
 
+== Images
+
+The syntax for images is `\{img:/path/\}` or `\{img(/alt-text/):/path/\}` for images with alt text. With namespaces in Camus 2 you can also write `\{image\/ref(/alt-text/):/path/\}`.
+
 == References
 
 In Camus 1 days references are only used to refer to other Camus documents or a specific tag in the current document, the syntax is `\{ref:/ref-path/\}` or `\{ref\(/ref-text/\):/ref-path/\}` if you want to add additional texts (e.g. when rendering to HTML a reference would generally be rendered as a hyperlink and `/ref-text/` would be this hyperlink's text).
@@ -74,6 +78,7 @@ In Camus 1 days references are only used to refer to other Camus documents or a 
 Starting from Camus 2 one can specify a *namespace* to a reference (together with the metadata block (described below) this forms the basis of the "personal knowledge base" parg of Camus 2). The syntax for this would be `\{/namespace-name/\/ref:/ref-path/\}`. How namespaces are handled are up to the parser & render, but the following namespace names shall be reserved:
 
 + `wiki` - for wiki ref (described below).
++ `image` for image ref (described above).
 + `extern` - for referencing a Camus document that's not on your hard drive.
 
 === Wiki ref
@@ -92,17 +97,17 @@ Tags work like the `<a name="xyz">` tag in HTML; it gives a name to a location w
   + Ordered and unordered lists.
   + Quote block
   + Footnote texts.
-  + Advanced title blocks.
+  + (In Camus 2) Advanced title blocks.
 + Blocks that uses a generic syntax:
   + Quote block
   + Tables
   + Comment blocks
   + Code blocks
   + Preformatted blocks
-  + Metadata blocks
-  + Raw output blocks
-  + Title blocks
-  + Advanced title blocks
+  + (In Camus 2) Metadata blocks
+  + (In Camus 2) Raw output blocks
+  + (In Camus 2) Title blocks
+  + (In Camus 2) Advanced title blocks
 
 === Lists
 
